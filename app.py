@@ -1,8 +1,9 @@
 # Gerekli Flask modüllerini ve diğer kütüphaneleri import edelim
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 import os
+import random
 
 # Flask uygulamasını başlatalım
 app = Flask(__name__)
@@ -254,13 +255,27 @@ def export_database_json():
 
 
     # Proje klasörüne 'database_export.json' olarak kaydetmek için:
-    export_file_path = os.path.join(os.path.dirname(__file__), 'database_export.json')
+    
+    fileName = f'database_export-{random.randint(10**8, 10**9 - 1)}.json'
+    export_file_path = os.path.join(os.path.dirname(__file__), 'files', fileName)
     with open(export_file_path, 'w', encoding='utf-8') as f:
         json.dump(output_data, f, ensure_ascii=False, indent=4)
     
-    flash(f"'database_export.json' dosyası proje klasörüne kaydedildi.", 'info')
+    flash(f"<a class=\"underline text-blue-50\" href=\"/files/{fileName}\" download>{fileName}</a> dosyası proje klasörüne kaydedildi.", 'info')
     # return jsonify(db_content) # Tarayıcıda göstermek için
     return redirect(url_for('dashboard')) # Veya başka bir sayfaya yönlendir
+
+# Route to retrieve files
+@app.route('/files/<filename>')
+def retrieve_file(filename):
+    try:
+        # Define the directory where files are stored
+        directory = os.path.join(os.path.dirname(__file__), 'files')
+        # Serve the file from the directory
+        return send_from_directory(directory, filename, as_attachment=True)
+    except FileNotFoundError:
+        flash("Requested file not found.", "error")
+        return redirect(url_for('dashboard'))
 
 
 # Uygulamayı çalıştırma (debug modu geliştirme için aktif)
