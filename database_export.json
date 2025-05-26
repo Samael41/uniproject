@@ -1,0 +1,23 @@
+{
+    "users": [
+        {
+            "id": 1,
+            "username": "wılly",
+            "email": "willy@veryhotmail.com",
+            "user_entries": []
+        },
+        {
+            "id": 2,
+            "username": "basil",
+            "email": "basil@gmail.com",
+            "user_entries": [
+                {
+                    "id": 1,
+                    "user_id": 2,
+                    "title": "asdfyuıo",
+                    "content": "asdfghjklşffff"
+                }
+            ]
+        }
+    ]
+}

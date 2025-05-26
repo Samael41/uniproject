@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kontrol Paneli - Flask Uygulaması</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <nav class="bg-white shadow-md p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="{{ url_for('index') }}" class="text-2xl font-bold text-gray-800">Flask Uygulaması</a>
+            <div class="flex items-center space-x-4">
+                {% if session.get('username') %}
+                    <span class="text-gray-700 text-sm font-medium">Hoş Geldiniz, {{ session['username'] }}!</span>
+                    <a href="{{ url_for('logout') }}" class="bg-red-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-600 transition duration-300">Çıkış Yap</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Giriş Yap</a>
+                    <a href="{{ url_for('register') }}" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition duration-300">Kayıt Ol</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow container mx-auto p-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-4">
+                    {% for category, message in messages %}
+                        <div class="p-3 rounded-md text-sm {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'danger' %}bg-red-100 text-red-800{% elif category == 'warning' %}bg-yellow-100 text-yellow-800{% else %}bg-blue-100 text-blue-800{% endif %} mb-2">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="bg-white p-8 rounded-lg shadow-lg mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">Kontrol Paneli</h1>
+            {% if session.get('user_id') %}
+                <p class="text-gray-600 mb-4">Kullanıcı ID'niz: <span class="font-mono bg-gray-200 px-2 py-1 rounded">{{ session['user_id'] }}</span></p>
+            {% endif %}
+            <div class="flex flex-wrap gap-4 mb-6">
+                <a href="{{ url_for('new_entry') }}" class="bg-green-600 text-white px-5 py-2 rounded-md text-lg font-semibold hover:bg-green-700 transition duration-300 flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    <span>Yeni Girdi Ekle</span>
+                </a>
+                <a href="{{ url_for('export_database_json') }}" class="bg-purple-600 text-white px-5 py-2 rounded-md text-lg font-semibold hover:bg-purple-700 transition duration-300 flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <span>Veritabanını Dışa Aktar (JSON)</span>
+                </a>
+            </div>
+
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Günlük Girdileriniz</h2>
+            {% if entries %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for entry in entries %}
+                        <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">{{ entry.title }}</h3>
+                            <p class="text-gray-700 mb-4">{{ entry.content }}</p>
+                            <div class="flex space-x-3">
+                                <a href="{{ url_for('edit_entry', entry_id=entry.id) }}" class="bg-yellow-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-yellow-600 transition duration-300 flex items-center space-x-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                    <span>Düzenle</span>
+                                </a>
+                                <form action="{{ url_for('delete_entry', entry_id=entry.id) }}" method="POST" onsubmit="return confirm('Bu girdiyi silmek istediğinizden emin misiniz?');">
+                                    <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-600 transition duration-300 flex items-center space-x-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        <span>Sil</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-600">Henüz bir günlük girdiniz yok. Yeni bir tane eklemek için yukarıdaki düğmeyi kullanın!</p>
+            {% endif %}
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white p-4 text-center">
+        <div class="container mx-auto">
+            <p>&copy; 2024 Flask Uygulaması. Tüm Hakları Saklıdır.</p>
+        </div>
+    </footer>
+</body>
+</html>
